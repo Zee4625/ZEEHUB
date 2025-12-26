@@ -1,0 +1,170 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- === CONFIGURARE ===
+local SETTINGS = {
+	ToggleKey = Enum.KeyCode.P,
+	TextSize = 14,
+	TextColor = Color3.fromRGB(255, 255, 255),
+	HighlightFill = Color3.fromRGB(255, 50, 50),
+	HighlightOutline = Color3.fromRGB(255, 255, 255),
+}
+
+local espEnabled = true 
+local activeESPs = {}
+
+-- === LOGICĂ GUI MUTABIL (DRAGGABLE) ===
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FruitESPGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 120, 0, 40)
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Notă: Draggable este deprecated, dar încă funcționează. Mai jos e codul de drag modern.
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local StatusButton = Instance.new("TextButton")
+StatusButton.Name = "StatusButton"
+StatusButton.Size = UDim2.new(1, 0, 1, 0)
+StatusButton.BackgroundTransparency = 1
+StatusButton.Font = Enum.Font.GothamBold
+StatusButton.TextSize = 14
+StatusButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+StatusButton.Text = "ESP: ON"
+StatusButton.Parent = MainFrame
+
+-- Funcție pentru Dragging Modern (pentru a evita bug-urile proprietății .Draggable)
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+		local delta = input.Position - dragStart
+		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+-- === LOGICĂ ESP ===
+local function cleanName(fullName)
+	return fullName:gsub(" Fruit", "")
+end
+
+local function removeESP(model)
+	if activeESPs[model] then
+		if activeESPs[model].Connection then activeESPs[model].Connection:Disconnect() end
+		if activeESPs[model].Visuals then
+			for _, v in pairs(activeESPs[model].Visuals) do if v then v:Destroy() end end
+		end
+		activeESPs[model] = nil
+	end
+end
+
+local function clearAllESP()
+	for model, _ in pairs(activeESPs) do removeESP(model) end
+end
+
+local function createESP(model)
+	if not espEnabled or activeESPs[model] then return end
+	local handle = model:FindFirstChild("Handle")
+	if not handle then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Adornee = model
+	highlight.FillColor = SETTINGS.HighlightFill
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Parent = model
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Adornee = handle
+	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = model
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextColor3 = SETTINGS.TextColor
+	textLabel.TextStrokeTransparency = 0
+	textLabel.Font = Enum.Font.GothamBold
+	textLabel.Parent = billboard
+
+	local connection = RunService.RenderStepped:Connect(function()
+		if espEnabled and model.Parent and handle.Parent and LocalPlayer.Character then
+			local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if root then
+				local dist = (root.Position - handle.Position).Magnitude
+				textLabel.Text = string.format("%s\n[%.0f m]", cleanName(model.Name), dist)
+			end
+		else
+			removeESP(model)
+		end
+	end)
+
+	activeESPs[model] = {Visuals = {highlight, billboard}, Connection = connection}
+end
+
+local function runScan()
+	if not espEnabled then return end
+	for _, obj in ipairs(Workspace:GetChildren()) do
+		if (obj:IsA("Model") or obj:IsA("Tool")) and obj.Name:find("Fruit") then
+			createESP(obj)
+		end
+	end
+end
+
+-- === ACTUALIZARE STARE (TOGGLE) ===
+local function updateStatus()
+	if espEnabled then
+		StatusButton.Text = "ESP: ON"
+		StatusButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+		runScan()
+	else
+		StatusButton.Text = "ESP: OFF"
+		StatusButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+		clearAllESP()
+	end
+end
+
+StatusButton.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	updateStatus()
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == SETTINGS.ToggleKey then
+		espEnabled = not espEnabled
+		updateStatus()
+	end
+end)
+
+Workspace.ChildAdded:Connect(function(child)
+	if espEnabled and child.Name:find("Fruit") then
+		task.wait(0.5)
+		createESP(child)
+	end
+end)
+
+runScan()
