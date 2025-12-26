@@ -7,16 +7,18 @@ local LocalPlayer = Players.LocalPlayer
 -- === CONFIGURARE ===
 local SETTINGS = {
 	ToggleKey = Enum.KeyCode.P,
-	TextSize = 29,
+	TextSize = 22, -- Dimensiune ajustată conform cerinței
 	TextColor = Color3.fromRGB(255, 255, 255),
 	HighlightFill = Color3.fromRGB(255, 50, 50),
 	HighlightOutline = Color3.fromRGB(255, 255, 255),
+	MaxSpeed = 300, -- viteza de farm
 }
 
 local espEnabled = true 
+local farmEnabled = false
 local activeESPs = {}
 
--- === LOGICĂ GUI MUTABIL (DRAGGABLE) ===
+-- === GUI (DRAGGABLE) ===
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FruitESPGui"
 ScreenGui.ResetOnSpawn = false
@@ -24,21 +26,22 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 120, 0, 40)
+MainFrame.Size = UDim2.new(0, 120, 0, 80) -- mărire pentru 2 butoane
 MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- Notă: Draggable este deprecated, dar încă funcționează. Mai jos e codul de drag modern.
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
 UICorner.Parent = MainFrame
 
+-- === BUTTON ESP ===
 local StatusButton = Instance.new("TextButton")
 StatusButton.Name = "StatusButton"
-StatusButton.Size = UDim2.new(1, 0, 1, 0)
+StatusButton.Size = UDim2.new(1, 0, 0.5, 0)
+StatusButton.Position = UDim2.new(0,0,0,0)
 StatusButton.BackgroundTransparency = 1
 StatusButton.Font = Enum.Font.GothamBold
 StatusButton.TextSize = 14
@@ -46,7 +49,19 @@ StatusButton.TextColor3 = Color3.fromRGB(0, 255, 100)
 StatusButton.Text = "ESP: ON"
 StatusButton.Parent = MainFrame
 
--- Funcție pentru Dragging Modern (pentru a evita bug-urile proprietății .Draggable)
+-- === BUTTON FARM ===
+local FarmButton = Instance.new("TextButton")
+FarmButton.Name = "FarmButton"
+FarmButton.Size = UDim2.new(1, 0, 0.5, 0)
+FarmButton.Position = UDim2.new(0,0,0.5,0)
+FarmButton.BackgroundTransparency = 1
+FarmButton.Font = Enum.Font.GothamBold
+FarmButton.TextSize = 14
+FarmButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+FarmButton.Text = "FARM: OFF"
+FarmButton.Parent = MainFrame
+
+-- Logică de Dragging
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -88,27 +103,31 @@ end
 
 local function createESP(model)
 	if not espEnabled or activeESPs[model] then return end
-	local handle = model:FindFirstChild("Handle")
+	local handle = model:FindFirstChild("Handle") or model:FindFirstChildWhichIsA("BasePart")
 	if not handle then return end
 
 	local highlight = Instance.new("Highlight")
 	highlight.Adornee = model
 	highlight.FillColor = SETTINGS.HighlightFill
+	highlight.OutlineColor = SETTINGS.HighlightOutline
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	highlight.Parent = model
 
 	local billboard = Instance.new("BillboardGui")
 	billboard.Adornee = handle
-	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.Size = UDim2.new(0, 200, 0, 70)
 	billboard.AlwaysOnTop = true
+	billboard.ExtentsOffset = Vector3.new(0, 2.5, 0)
 	billboard.Parent = model
 
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Size = UDim2.new(1, 0, 1, 0)
 	textLabel.BackgroundTransparency = 1
 	textLabel.TextColor3 = SETTINGS.TextColor
-	textLabel.TextStrokeTransparency = 0
+	textLabel.TextStrokeTransparency = 0.2
 	textLabel.Font = Enum.Font.GothamBold
+	textLabel.TextSize = SETTINGS.TextSize
+	textLabel.TextWrapped = false
 	textLabel.Parent = billboard
 
 	local connection = RunService.RenderStepped:Connect(function()
@@ -135,8 +154,58 @@ local function runScan()
 	end
 end
 
--- === ACTUALIZARE STARE (TOGGLE) ===
-local function updateStatus()
+-- === FARM LOGIC ===
+local function getCharacter()
+	while not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
+		LocalPlayer.CharacterAdded:Wait()
+	end
+	return LocalPlayer.Character
+end
+
+local function toggleNoclip(state)
+	for _, v in pairs(getCharacter():GetChildren()) do
+		if v:IsA("BasePart") then
+			v.CanCollide = not state
+		end
+	end
+end
+
+local function TeleportToFruit(fruitHandle, speed)
+	speed = speed or SETTINGS.MaxSpeed
+	toggleNoclip(true)
+	local hrp = getCharacter().HumanoidRootPart
+	while (hrp.Position - fruitHandle.Position).Magnitude > 1 do
+		local dir = (fruitHandle.Position - hrp.Position).Unit
+		hrp.CFrame = hrp.CFrame + dir * (speed * task.wait())
+	end
+	toggleNoclip(false)
+end
+
+local function farmLoop()
+	while true do
+		if farmEnabled then
+			local fruits = {}
+			for _, obj in ipairs(Workspace:GetChildren()) do
+				if obj:IsA("Model") and obj.Name:find("Fruit") and obj:FindFirstChild("Handle") then
+					table.insert(fruits, obj)
+				end
+			end
+			table.sort(fruits, function(a,b)
+				return (getCharacter().HumanoidRootPart.Position - a.Handle.Position).Magnitude <
+					   (getCharacter().HumanoidRootPart.Position - b.Handle.Position).Magnitude
+			end)
+			if #fruits > 0 then
+				TeleportToFruit(fruits[1].Handle)
+			end
+		end
+		task.wait(0.1)
+	end
+end
+
+task.spawn(farmLoop)
+
+-- === UPDATE STARE ===
+local function updateESPStatus()
 	if espEnabled then
 		StatusButton.Text = "ESP: ON"
 		StatusButton.TextColor3 = Color3.fromRGB(0, 255, 100)
@@ -148,15 +217,32 @@ local function updateStatus()
 	end
 end
 
+local function updateFarmStatus()
+	if farmEnabled then
+		FarmButton.Text = "FARM: ON"
+		FarmButton.TextColor3 = Color3.fromRGB(0, 255, 100)
+	else
+		FarmButton.Text = "FARM: OFF"
+		FarmButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+	end
+end
+
 StatusButton.MouseButton1Click:Connect(function()
 	espEnabled = not espEnabled
-	updateStatus()
+	updateESPStatus()
+end)
+
+FarmButton.MouseButton1Click:Connect(function()
+	farmEnabled = not farmEnabled
+	updateFarmStatus()
 end)
 
 UserInputService.InputBegan:Connect(function(input, processed)
-	if not processed and input.KeyCode == SETTINGS.ToggleKey then
-		espEnabled = not espEnabled
-		updateStatus()
+	if not processed then
+		if input.KeyCode == SETTINGS.ToggleKey then
+			espEnabled = not espEnabled
+			updateESPStatus()
+		end
 	end
 end)
 
@@ -167,4 +253,5 @@ Workspace.ChildAdded:Connect(function(child)
 	end
 end)
 
-runScan()
+updateESPStatus()
+updateFarmStatus()
