@@ -1,0 +1,122 @@
+--[[ 
+    Safe Mode Elegant - Auto Fly When Low HP
+--]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- CONFIG
+local LowHPThreshold = 30
+local FlySpeed = 70 -- viteza de urcare
+local SafeHeightOffset = 10 -- cât sus stai până te oprești
+local FlyEnabled = false
+
+-- === GUI ===
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SafeModeGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 280, 0, 100)
+MainFrame.Position = UDim2.new(0.35,0,0.35,0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0,10)
+UICorner.Parent = MainFrame
+
+-- Draggable
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+		local delta = input.Position - dragStart
+		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+-- Title
+local Label = Instance.new("TextLabel")
+Label.Size = UDim2.new(1,0,0.4,0)
+Label.Position = UDim2.new(0,0,0,0)
+Label.BackgroundTransparency = 1
+Label.TextColor3 = Color3.fromRGB(255,255,255)
+Label.TextScaled = true
+Label.Font = Enum.Font.GothamBold
+Label.Text = "Safe Mode"
+Label.Parent = MainFrame
+
+-- Toggle button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0.8,0,0.5,0)
+ToggleButton.Position = UDim2.new(0.1,0,0.45,0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(255,50,50)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextScaled = true
+ToggleButton.Text = "OFF"
+ToggleButton.Parent = MainFrame
+
+ToggleButton.MouseButton1Click:Connect(function()
+	FlyEnabled = not FlyEnabled
+	if FlyEnabled then
+		ToggleButton.Text = "ON"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(0,255,100)
+	else
+		ToggleButton.Text = "OFF"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(255,50,50)
+	end
+end)
+
+-- === FLY LOGIC ===
+local BV, BG
+
+RunService.Heartbeat:Connect(function()
+	if FlyEnabled and Humanoid.Health < LowHPThreshold then
+		-- Creează BodyVelocity dacă nu există
+		if not BV then
+			BV = Instance.new("BodyVelocity")
+			BV.MaxForce = Vector3.new(1e5,1e5,1e5)
+			BV.Velocity = Vector3.new(0,FlySpeed,0)
+			BV.Parent = RootPart
+		end
+		if not BG then
+			BG = Instance.new("BodyGyro")
+			BG.MaxTorque = Vector3.new(1e5,1e5,1e5)
+			BG.CFrame = RootPart.CFrame
+			BG.Parent = RootPart
+		end
+		BV.Velocity = Vector3.new(0,FlySpeed,0)
+		BG.CFrame = RootPart.CFrame -- menține orientarea
+	else
+		-- Curăță
+		if BV then
+			BV:Destroy()
+			BV = nil
+		end
+		if BG then
+			BG:Destroy()
+			BG = nil
+		end
+	end
+end)
