@@ -1,41 +1,40 @@
 --[[ 
-    Safe Mode Elegant - Auto Fly When Low HP
+    Safe Mode Player - Robust with Retry
 --]]
 
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
 
+-- Player references
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local RootPart = Character:WaitForChild("HumanoidRootPart")
+local LowHPPercent = 34 -- HP threshold
+local FlySpeed = 67
+local SafeModeEnabled = false
+local MaxRetries = 3
+local RetryDelay = 1
 
--- CONFIG
-local LowHPThreshold = 30
-local FlySpeed = 70 -- viteza de urcare
-local SafeHeightOffset = 10 -- cât sus stai până te oprești
-local FlyEnabled = false
-
--- === GUI ===
+-- === GUI SETUP ===
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SafeModeGui"
+ScreenGui.Name = "SafeModePlayerGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 100)
-MainFrame.Position = UDim2.new(0.35,0,0.35,0)
+MainFrame.Size = UDim2.new(0, 240, 0, 70)
+MainFrame.Position = UDim2.new(0.4,0,0.4,0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0,10)
+UICorner.CornerRadius = UDim.new(0,8)
 UICorner.Parent = MainFrame
 
--- Draggable
+-- Draggable logic
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -56,30 +55,46 @@ UserInputService.InputEnded:Connect(function(input)
 	end
 end)
 
--- Title
-local Label = Instance.new("TextLabel")
-Label.Size = UDim2.new(1,0,0.4,0)
-Label.Position = UDim2.new(0,0,0,0)
-Label.BackgroundTransparency = 1
-Label.TextColor3 = Color3.fromRGB(255,255,255)
-Label.TextScaled = true
-Label.Font = Enum.Font.GothamBold
-Label.Text = "Safe Mode"
-Label.Parent = MainFrame
+-- Title label
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1,0,0.4,0)
+TitleLabel.Position = UDim2.new(0,0,0,0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+TitleLabel.TextScaled = true
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "Safe Mode"
+TitleLabel.Parent = MainFrame
 
 -- Toggle button
 local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0.8,0,0.5,0)
-ToggleButton.Position = UDim2.new(0.1,0,0.45,0)
+ToggleButton.Size = UDim2.new(0.6,0,0.4,0)
+ToggleButton.Position = UDim2.new(0.2,0,0.45,0)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(255,50,50)
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextScaled = true
 ToggleButton.Text = "OFF"
 ToggleButton.Parent = MainFrame
 
+-- Close button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0.15,0,0.2,0)
+CloseButton.Position = UDim2.new(0.82,0,0,0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200,0,0)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextScaled = true
+CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
+CloseButton.Parent = MainFrame
+
+CloseButton.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+-- Toggle logic
 ToggleButton.MouseButton1Click:Connect(function()
-	FlyEnabled = not FlyEnabled
-	if FlyEnabled then
+	SafeModeEnabled = not SafeModeEnabled
+	if SafeModeEnabled then
 		ToggleButton.Text = "ON"
 		ToggleButton.BackgroundColor3 = Color3.fromRGB(0,255,100)
 	else
@@ -88,35 +103,60 @@ ToggleButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- === FLY LOGIC ===
-local BV, BG
+-- Function to get character data
+local function getCharacterData()
+	local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local root = char:FindFirstChild("HumanoidRootPart")
+	return char, humanoid, root
+end
 
+-- Function to safely apply fly
+local function applySafeFly(root)
+	if not root then return end
+	local retries = 0
+	local bv, bg
+	while retries < MaxRetries do
+		if not root.Parent then
+			task.wait(RetryDelay)
+			retries = retries + 1
+		else
+			bv = Instance.new("BodyVelocity")
+			bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+			bv.Velocity = Vector3.new(0, FlySpeed, 0)
+			bv.Parent = root
+
+			bg = Instance.new("BodyGyro")
+			bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
+			bg.CFrame = root.CFrame
+			bg.Parent = root
+			break
+		end
+	end
+	return bv, bg
+end
+
+-- Main loop
+local BV, BG
 RunService.Heartbeat:Connect(function()
-	if FlyEnabled and Humanoid.Health < LowHPThreshold then
-		-- Creează BodyVelocity dacă nu există
-		if not BV then
-			BV = Instance.new("BodyVelocity")
-			BV.MaxForce = Vector3.new(1e5,1e5,1e5)
-			BV.Velocity = Vector3.new(0,FlySpeed,0)
-			BV.Parent = RootPart
+	if not SafeModeEnabled then
+		if BV then BV:Destroy(); BV=nil end
+		if BG then BG:Destroy(); BG=nil end
+		return
+	end
+
+	local char, humanoid, root = getCharacterData()
+	if humanoid and root and humanoid.Health > 0 and humanoid.Health/humanoid.MaxHealth*100 <= LowHPPercent then
+		if not BV or not BV.Parent then
+			BV, BG = applySafeFly(root)
 		end
-		if not BG then
-			BG = Instance.new("BodyGyro")
-			BG.MaxTorque = Vector3.new(1e5,1e5,1e5)
-			BG.CFrame = RootPart.CFrame
-			BG.Parent = RootPart
+		-- Maintain flight
+		if BV and BG then
+			BV.Velocity = Vector3.new(0, FlySpeed, 0)
+			BG.CFrame = root.CFrame
 		end
-		BV.Velocity = Vector3.new(0,FlySpeed,0)
-		BG.CFrame = RootPart.CFrame -- menține orientarea
 	else
-		-- Curăță
-		if BV then
-			BV:Destroy()
-			BV = nil
-		end
-		if BG then
-			BG:Destroy()
-			BG = nil
-		end
+		if BV then BV:Destroy(); BV=nil end
+		if BG then BG:Destroy(); BG=nil end
 	end
 end)
