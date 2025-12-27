@@ -1,0 +1,290 @@
+-- "ZERON" EXECUTOR V5: SUPREME HACKER EDITION
+-- Culori: Pitch Black & Cyber Neon Green
+-- Caracteristici: Script History con Delete, Multi-Tabs, Dual-Scroll, Scanline FX
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Cleanup total
+pcall(function()
+    if player.PlayerGui:FindFirstChild("ZeronV5") then
+        player.PlayerGui.ZeronV5:Destroy()
+    end
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "ZeronV5"
+gui.ResetOnSpawn = false
+gui.Parent = player.PlayerGui
+
+-- DATA STORAGE
+local scripts = {{name = "Script 1", content = "-- 'ZERON' V5 SUPREME\nprint('System Overload Protected') "}}
+local history = {} 
+local activeTabIndex = 1
+
+-- MAIN FRAME
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 820, 0, 500)
+main.Position = UDim2.new(0.5, -410, 0.5, -250)
+main.BackgroundColor3 = Color3.fromRGB(2, 2, 2)
+main.BorderSizePixel = 0
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 5)
+
+-- NEON BORDER GLOW
+local glow = Instance.new("UIStroke", main)
+glow.Color = Color3.fromRGB(0, 255, 100)
+glow.Thickness = 3
+glow.Transparency = 0.2
+
+-- SCANLINE EFFECT (PENTRU ASPECT WOW)
+local scanline = Instance.new("Frame", main)
+scanline.Size = UDim2.new(1, 0, 1, 0)
+scanline.BackgroundTransparency = 0.95
+scanline.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+scanline.ZIndex = 10
+scanline.Active = false
+scanline.Visible = true
+Instance.new("UICorner", scanline).CornerRadius = UDim.new(0, 5)
+
+local line = Instance.new("Frame", scanline)
+line.Size = UDim2.new(1, 0, 0, 2)
+line.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+line.BackgroundTransparency = 0.8
+line.BorderSizePixel = 0
+
+task.spawn(function()
+    while true do
+        line.Position = UDim2.new(0, 0, 0, 0)
+        line:TweenPosition(UDim2.new(0, 0, 1, 0), "In", "Linear", 3)
+        task.wait(3)
+    end
+end)
+
+-- 1. SIDEBAR
+local sidebar = Instance.new("Frame", main)
+sidebar.Size = UDim2.new(0, 50, 1, 0)
+sidebar.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+sidebar.BorderSizePixel = 0
+
+local logo = Instance.new("TextLabel", sidebar)
+logo.Size = UDim2.new(1, 0, 0, 60)
+logo.Text = "Z"
+logo.TextColor3 = Color3.fromRGB(0, 255, 120)
+logo.Font = Enum.Font.Code
+logo.TextSize = 38
+logo.BackgroundTransparency = 1
+
+-- 2. FOLDER ZONE (ISTORIC CU STERGERE)
+local folderZone = Instance.new("Frame", main)
+folderZone.Size = UDim2.new(0, 180, 1, -60)
+folderZone.Position = UDim2.new(0, 55, 0, 50)
+folderZone.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+folderZone.BorderSizePixel = 0
+Instance.new("UICorner", folderZone)
+
+local folderLabel = Instance.new("TextLabel", folderZone)
+folderLabel.Size = UDim2.new(1, 0, 0, 30)
+folderLabel.Text = "EXECUTED HISTORY"
+folderLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
+folderLabel.Font = Enum.Font.Code
+folderLabel.TextSize = 13
+folderLabel.BackgroundTransparency = 1
+
+local folderScroll = Instance.new("ScrollingFrame", folderZone)
+folderScroll.Size = UDim2.new(1, -10, 1, -40)
+folderScroll.Position = UDim2.new(0, 5, 0, 35)
+folderScroll.BackgroundTransparency = 1
+folderScroll.ScrollBarThickness = 1
+folderScroll.CanvasSize = UDim2.new(0, 0, 10, 0)
+
+local folderLayout = Instance.new("UIListLayout", folderScroll)
+folderLayout.Padding = UDim.new(0, 5)
+
+-- 3. TOP BAR
+local topBar = Instance.new("Frame", main)
+topBar.Size = UDim2.new(1, 0, 0, 45)
+topBar.BackgroundTransparency = 1
+
+local title = Instance.new("TextLabel", topBar)
+title.Size = UDim2.new(0, 300, 1, 0)
+title.Position = UDim2.new(0, 65, 0, 0)
+title.Text = '"ZERON" SUPREME EXECUTOR'
+title.TextColor3 = Color3.fromRGB(0, 255, 120)
+title.Font = Enum.Font.Code
+title.TextSize = 18
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.BackgroundTransparency = 1
+
+local closeBtn = Instance.new("TextButton", topBar)
+closeBtn.Size = UDim2.new(0, 45, 0, 45)
+closeBtn.Position = UDim2.new(1, -45, 0, 0)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 22
+closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+-- 4. TABS
+local tabScroll = Instance.new("ScrollingFrame", main)
+tabScroll.Size = UDim2.new(1, -260, 0, 35)
+tabScroll.Position = UDim2.new(0, 245, 0, 55)
+tabScroll.BackgroundTransparency = 1
+tabScroll.ScrollBarThickness = 0
+tabScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
+
+local tabLayout = Instance.new("UIListLayout", tabScroll)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 6)
+
+-- 5. EDITOR ZONE (ULTRA SCROLL)
+local editorContainer = Instance.new("ScrollingFrame", main)
+editorContainer.Size = UDim2.new(1, -260, 1, -170)
+editorContainer.Position = UDim2.new(0, 245, 0, 100)
+editorContainer.BackgroundColor3 = Color3.fromRGB(4, 4, 4)
+editorContainer.BorderSizePixel = 0
+editorContainer.ScrollBarThickness = 4
+editorContainer.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 120)
+editorContainer.CanvasSize = UDim2.new(4, 0, 20, 0) 
+
+local editor = Instance.new("TextBox", editorContainer)
+editor.Size = UDim2.new(1, 0, 1, 0)
+editor.BackgroundTransparency = 1
+editor.TextColor3 = Color3.fromRGB(0, 255, 150)
+editor.Font = Enum.Font.Code
+editor.TextSize = 15
+editor.MultiLine = true
+editor.ClearTextOnFocus = false
+editor.TextXAlignment = Enum.TextXAlignment.Left
+editor.TextYAlignment = Enum.TextYAlignment.Top
+editor.TextWrapped = false
+
+-- FOOTER
+local footer = Instance.new("Frame", main)
+footer.Size = UDim2.new(1, -260, 0, 50)
+footer.Position = UDim2.new(0, 245, 1, -60)
+footer.BackgroundTransparency = 1
+
+local function createBtn(text, x, isSpecial)
+    local btn = Instance.new("TextButton", footer)
+    btn.Size = UDim2.new(0, 120, 0, 35)
+    btn.Position = UDim2.new(0, x, 0.5, -17)
+    btn.BackgroundColor3 = isSpecial and Color3.fromRGB(0, 40, 20) or Color3.fromRGB(15, 15, 15)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0, 255, 120)
+    btn.Font = Enum.Font.Code
+    btn.TextSize = 13
+    Instance.new("UICorner", btn)
+    local s = Instance.new("UIStroke", btn)
+    s.Color = Color3.fromRGB(0, 255, 100)
+    s.Thickness = 1
+    return btn
+end
+
+local execBtn = createBtn("EXECUTE", 0, true)
+local clearBtn = createBtn("CLEAR", 130, false)
+local addTabBtn = createBtn("NEW TAB", 260, false)
+
+-- LOGICA FOLDER (ISTORIC CU DELETE)
+local function updateFolder()
+    for _, v in pairs(folderScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    for i, code in ipairs(history) do
+        local hFrame = Instance.new("Frame", folderScroll)
+        hFrame.Size = UDim2.new(1, -5, 0, 30)
+        hFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+        Instance.new("UICorner", hFrame)
+
+        local hBtn = Instance.new("TextButton", hFrame)
+        hBtn.Size = UDim2.new(1, -30, 1, 0)
+        hBtn.BackgroundTransparency = 1
+        hBtn.Text = "Log_Script_"..i
+        hBtn.TextColor3 = Color3.fromRGB(0, 200, 100)
+        hBtn.Font = Enum.Font.Code
+        hBtn.TextSize = 11
+
+        local delBtn = Instance.new("TextButton", hFrame)
+        delBtn.Size = UDim2.new(0, 25, 0, 25)
+        delBtn.Position = UDim2.new(1, -27, 0.5, -12)
+        delBtn.Text = "x"
+        delBtn.TextColor3 = Color3.fromRGB(200, 50, 50)
+        delBtn.BackgroundTransparency = 1
+        delBtn.Font = Enum.Font.GothamBold
+        
+        hBtn.MouseButton1Click:Connect(function() editor.Text = code end)
+        delBtn.MouseButton1Click:Connect(function()
+            table.remove(history, i)
+            updateFolder()
+        end)
+    end
+end
+
+-- LOGICA TABS
+local function refreshTabs()
+    for _, v in pairs(tabScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    for i, data in ipairs(scripts) do
+        local tabFrame = Instance.new("Frame", tabScroll)
+        tabFrame.Size = UDim2.new(0, 130, 1, 0)
+        tabFrame.BackgroundColor3 = (i == activeTabIndex) and Color3.fromRGB(0, 45, 20) or Color3.fromRGB(10, 10, 10)
+        Instance.new("UICorner", tabFrame)
+
+        local tabBtn = Instance.new("TextButton", tabFrame)
+        tabBtn.Size = UDim2.new(1, -30, 1, 0)
+        tabBtn.BackgroundTransparency = 1
+        tabBtn.Text = data.name
+        tabBtn.TextColor3 = (i == activeTabIndex) and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(120, 120, 120)
+        tabBtn.Font = Enum.Font.Code
+        tabBtn.TextSize = 12
+
+        local closeT = Instance.new("TextButton", tabFrame)
+        closeT.Size = UDim2.new(0, 20, 0, 20)
+        closeT.Position = UDim2.new(1, -25, 0.5, -10)
+        closeT.Text = "x"
+        closeT.TextColor3 = Color3.fromRGB(255, 80, 80)
+        closeT.BackgroundTransparency = 1
+        closeT.TextSize = 14
+
+        tabBtn.MouseButton1Click:Connect(function()
+            scripts[activeTabIndex].content = editor.Text
+            activeTabIndex = i
+            editor.Text = scripts[i].content
+            refreshTabs()
+        end)
+
+        closeT.MouseButton1Click:Connect(function()
+            if #scripts > 1 then
+                table.remove(scripts, i)
+                if activeTabIndex >= i and activeTabIndex > 1 then activeTabIndex = activeTabIndex - 1 end
+                editor.Text = scripts[activeTabIndex].content
+                refreshTabs()
+            end
+        end)
+    end
+end
+
+-- ACTIUNI
+execBtn.MouseButton1Click:Connect(function()
+    local code = editor.Text
+    table.insert(history, 1, code)
+    updateFolder()
+    local func, err = loadstring(code)
+    if func then task.spawn(func) else warn("Zeron Error: "..err) end
+end)
+
+clearBtn.MouseButton1Click:Connect(function() editor.Text = "" end)
+
+addTabBtn.MouseButton1Click:Connect(function()
+    table.insert(scripts, {name = "Script "..(#scripts + 1), content = ""})
+    refreshTabs()
+end)
+
+-- INITIALIZARE
+editor.Text = scripts[1].content
+refreshTabs()
+updateFolder()
+
+-- DRAG SYSTEM
+local dragging, dragStart, startPos
+topBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = i.Position startPos = main.Position end end)
+UIS.InputChanged:Connect(function(i) if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then local d = i.Position - dragStart main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y) end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
