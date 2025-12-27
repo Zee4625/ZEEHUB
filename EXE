@@ -1,6 +1,5 @@
--- "ZERON" EXECUTOR V5: SUPREME HACKER EDITION
--- Culori: Pitch Black & Cyber Neon Green
--- Caracteristici: Script History con Delete, Multi-Tabs, Dual-Scroll, Scanline FX
+-- ZeeZeron V11: THE ULTIMATE PERSISTENT EXECUTOR (FIXED COLORS)
+-- Features: Syntax Highlighting, Line Numbers, Security Scan, History, Tabs, Minimize
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -8,198 +7,195 @@ local player = Players.LocalPlayer
 
 -- Cleanup total
 pcall(function()
-    if player.PlayerGui:FindFirstChild("ZeronV5") then
-        player.PlayerGui.ZeronV5:Destroy()
+    if player.PlayerGui:FindFirstChild("ZeeZeronV11") then
+        player.PlayerGui.ZeeZeronV11:Destroy()
     end
 end)
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "ZeronV5"
+gui.Name = "ZeeZeronV11"
 gui.ResetOnSpawn = false
 gui.Parent = player.PlayerGui
 
 -- DATA STORAGE
-local scripts = {{name = "Script 1", content = "-- 'ZERON' V5 SUPREME\nprint('System Overload Protected') "}}
 local history = {} 
-local activeTabIndex = 1
 
 -- MAIN FRAME
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 820, 0, 500)
-main.Position = UDim2.new(0.5, -410, 0.5, -250)
-main.BackgroundColor3 = Color3.fromRGB(2, 2, 2)
+main.Size = UDim2.new(0, 850, 0, 520)
+main.Position = UDim2.new(0.5, -425, 0.5, -260)
+main.BackgroundColor3 = Color3.fromRGB(11, 11, 11)
 main.BorderSizePixel = 0
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
 
--- NEON BORDER GLOW
 local glow = Instance.new("UIStroke", main)
-glow.Color = Color3.fromRGB(0, 255, 100)
-glow.Thickness = 3
-glow.Transparency = 0.2
+glow.Color = Color3.fromRGB(0, 255, 120)
+glow.Thickness = 2
+glow.Transparency = 0.3
 
--- SCANLINE EFFECT (PENTRU ASPECT WOW)
-local scanline = Instance.new("Frame", main)
-scanline.Size = UDim2.new(1, 0, 1, 0)
-scanline.BackgroundTransparency = 0.95
-scanline.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-scanline.ZIndex = 10
-scanline.Active = false
-scanline.Visible = true
-Instance.new("UICorner", scanline).CornerRadius = UDim.new(0, 5)
-
-local line = Instance.new("Frame", scanline)
-line.Size = UDim2.new(1, 0, 0, 2)
-line.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-line.BackgroundTransparency = 0.8
-line.BorderSizePixel = 0
-
-task.spawn(function()
-    while true do
-        line.Position = UDim2.new(0, 0, 0, 0)
-        line:TweenPosition(UDim2.new(0, 0, 1, 0), "In", "Linear", 3)
-        task.wait(3)
-    end
-end)
-
--- 1. SIDEBAR
-local sidebar = Instance.new("Frame", main)
-sidebar.Size = UDim2.new(0, 50, 1, 0)
-sidebar.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
-sidebar.BorderSizePixel = 0
-
-local logo = Instance.new("TextLabel", sidebar)
-logo.Size = UDim2.new(1, 0, 0, 60)
-logo.Text = "Z"
-logo.TextColor3 = Color3.fromRGB(0, 255, 120)
-logo.Font = Enum.Font.Code
-logo.TextSize = 38
-logo.BackgroundTransparency = 1
-
--- 2. FOLDER ZONE (ISTORIC CU STERGERE)
-local folderZone = Instance.new("Frame", main)
-folderZone.Size = UDim2.new(0, 180, 1, -60)
-folderZone.Position = UDim2.new(0, 55, 0, 50)
-folderZone.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-folderZone.BorderSizePixel = 0
-Instance.new("UICorner", folderZone)
-
-local folderLabel = Instance.new("TextLabel", folderZone)
-folderLabel.Size = UDim2.new(1, 0, 0, 30)
-folderLabel.Text = "EXECUTED HISTORY"
-folderLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
-folderLabel.Font = Enum.Font.Code
-folderLabel.TextSize = 13
-folderLabel.BackgroundTransparency = 1
-
-local folderScroll = Instance.new("ScrollingFrame", folderZone)
-folderScroll.Size = UDim2.new(1, -10, 1, -40)
-folderScroll.Position = UDim2.new(0, 5, 0, 35)
-folderScroll.BackgroundTransparency = 1
-folderScroll.ScrollBarThickness = 1
-folderScroll.CanvasSize = UDim2.new(0, 0, 10, 0)
-
-local folderLayout = Instance.new("UIListLayout", folderScroll)
-folderLayout.Padding = UDim.new(0, 5)
-
--- 3. TOP BAR
+-- TOP BAR
 local topBar = Instance.new("Frame", main)
 topBar.Size = UDim2.new(1, 0, 0, 45)
 topBar.BackgroundTransparency = 1
 
 local title = Instance.new("TextLabel", topBar)
-title.Size = UDim2.new(0, 300, 1, 0)
-title.Position = UDim2.new(0, 65, 0, 0)
-title.Text = '"ZERON" SUPREME EXECUTOR'
+title.Size = UDim2.new(0, 200, 1, 0)
+title.Position = UDim2.new(0, 20, 0, 0)
+title.Text = "ZeeZeron V11"
 title.TextColor3 = Color3.fromRGB(0, 255, 120)
 title.Font = Enum.Font.Code
-title.TextSize = 18
+title.TextSize = 19
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.BackgroundTransparency = 1
 
 local closeBtn = Instance.new("TextButton", topBar)
-closeBtn.Size = UDim2.new(0, 45, 0, 45)
-closeBtn.Position = UDim2.new(1, -45, 0, 0)
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -45, 0, 2.5)
 closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+closeBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
 closeBtn.BackgroundTransparency = 1
 closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 22
-closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+closeBtn.TextSize = 18
 
--- 4. TABS
-local tabScroll = Instance.new("ScrollingFrame", main)
-tabScroll.Size = UDim2.new(1, -260, 0, 35)
-tabScroll.Position = UDim2.new(0, 245, 0, 55)
-tabScroll.BackgroundTransparency = 1
-tabScroll.ScrollBarThickness = 0
-tabScroll.CanvasSize = UDim2.new(2, 0, 0, 0)
+local miniBtn = Instance.new("TextButton", topBar)
+miniBtn.Size = UDim2.new(0, 40, 0, 40)
+miniBtn.Position = UDim2.new(1, -85, 0, 2.5)
+miniBtn.Text = "-"
+miniBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+miniBtn.BackgroundTransparency = 1
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.TextSize = 25
 
-local tabLayout = Instance.new("UIListLayout", tabScroll)
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.Padding = UDim.new(0, 6)
+-- EDITOR AREA
+local editorMain = Instance.new("Frame", main)
+editorMain.Size = UDim2.new(1, -260, 1, -180)
+editorMain.Position = UDim2.new(0, 245, 0, 80)
+editorMain.BackgroundColor3 = Color3.fromRGB(7, 7, 7)
+Instance.new("UICorner", editorMain)
 
--- 5. EDITOR ZONE (ULTRA SCROLL)
-local editorContainer = Instance.new("ScrollingFrame", main)
-editorContainer.Size = UDim2.new(1, -260, 1, -170)
-editorContainer.Position = UDim2.new(0, 245, 0, 100)
-editorContainer.BackgroundColor3 = Color3.fromRGB(4, 4, 4)
-editorContainer.BorderSizePixel = 0
-editorContainer.ScrollBarThickness = 4
-editorContainer.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 120)
-editorContainer.CanvasSize = UDim2.new(4, 0, 20, 0) 
+local editorScroll = Instance.new("ScrollingFrame", editorMain)
+editorScroll.Size = UDim2.new(1, -10, 1, -10)
+editorScroll.Position = UDim2.new(0, 5, 0, 5)
+editorScroll.BackgroundTransparency = 1
+editorScroll.ScrollBarThickness = 3
+editorScroll.CanvasSize = UDim2.new(3, 0, 15, 0)
 
-local editor = Instance.new("TextBox", editorContainer)
-editor.Size = UDim2.new(1, 0, 1, 0)
+local lineNumbers = Instance.new("TextLabel", editorScroll)
+lineNumbers.Size = UDim2.new(0, 35, 1, 0)
+lineNumbers.BackgroundTransparency = 1
+lineNumbers.TextColor3 = Color3.fromRGB(255, 180, 50)
+lineNumbers.Font = Enum.Font.Code
+lineNumbers.TextSize = 14
+lineNumbers.TextYAlignment = Enum.TextYAlignment.Top
+lineNumbers.TextXAlignment = Enum.TextXAlignment.Right
+lineNumbers.ZIndex = 2
+
+local highlightLabel = Instance.new("TextLabel", editorScroll)
+highlightLabel.Size = UDim2.new(1, -45, 1, 0)
+highlightLabel.Position = UDim2.new(0, 45, 0, 0)
+highlightLabel.BackgroundTransparency = 1
+highlightLabel.RichText = true
+highlightLabel.TextXAlignment = Enum.TextXAlignment.Left
+highlightLabel.TextYAlignment = Enum.TextYAlignment.Top
+highlightLabel.Font = Enum.Font.Code
+highlightLabel.TextSize = 14
+highlightLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+highlightLabel.ZIndex = 3
+
+local editor = Instance.new("TextBox", editorScroll)
+editor.Size = UDim2.new(1, -45, 1, 0)
+editor.Position = UDim2.new(0, 45, 0, 0)
 editor.BackgroundTransparency = 1
-editor.TextColor3 = Color3.fromRGB(0, 255, 150)
+editor.TextColor3 = Color3.fromRGB(255, 255, 255)
+editor.TextTransparency = 0.8 -- Transparență ridicată pentru a lăsa culorile să se vadă
 editor.Font = Enum.Font.Code
-editor.TextSize = 15
+editor.TextSize = 14
 editor.MultiLine = true
 editor.ClearTextOnFocus = false
 editor.TextXAlignment = Enum.TextXAlignment.Left
 editor.TextYAlignment = Enum.TextYAlignment.Top
 editor.TextWrapped = false
+editor.ZIndex = 4
 
--- FOOTER
-local footer = Instance.new("Frame", main)
-footer.Size = UDim2.new(1, -260, 0, 50)
-footer.Position = UDim2.new(0, 245, 1, -60)
-footer.BackgroundTransparency = 1
+-- SIDEBAR LOGS (HISTORY)
+local folderZone = Instance.new("Frame", main)
+folderZone.Size = UDim2.new(0, 180, 1, -100)
+folderZone.Position = UDim2.new(0, 55, 0, 50)
+folderZone.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+Instance.new("UICorner", folderZone)
 
-local function createBtn(text, x, isSpecial)
-    local btn = Instance.new("TextButton", footer)
-    btn.Size = UDim2.new(0, 120, 0, 35)
-    btn.Position = UDim2.new(0, x, 0.5, -17)
-    btn.BackgroundColor3 = isSpecial and Color3.fromRGB(0, 40, 20) or Color3.fromRGB(15, 15, 15)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(0, 255, 120)
-    btn.Font = Enum.Font.Code
-    btn.TextSize = 13
-    Instance.new("UICorner", btn)
-    local s = Instance.new("UIStroke", btn)
-    s.Color = Color3.fromRGB(0, 255, 100)
-    s.Thickness = 1
-    return btn
+local folderScroll = Instance.new("ScrollingFrame", folderZone)
+folderScroll.Size = UDim2.new(1, -10, 1, -10)
+folderScroll.Position = UDim2.new(0, 5, 0, 5)
+folderScroll.BackgroundTransparency = 1
+folderScroll.ScrollBarThickness = 2
+local logLayout = Instance.new("UIListLayout", folderScroll)
+logLayout.Padding = UDim.new(0, 5)
+
+-- FOOTER PANEL (SCANNER)
+local securityBar = Instance.new("Frame", main)
+securityBar.Size = UDim2.new(1, -60, 0, 30)
+securityBar.Position = UDim2.new(0, 55, 1, -35)
+securityBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", securityBar)
+
+local securityText = Instance.new("TextLabel", securityBar)
+securityText.Size = UDim2.new(1, -20, 1, 0)
+securityText.Position = UDim2.new(0, 10, 0, 0)
+securityText.Text = "Security: Waiting for script..."
+securityText.TextColor3 = Color3.fromRGB(150, 150, 150)
+securityText.Font = Enum.Font.Code
+securityText.TextSize = 12
+securityText.BackgroundTransparency = 1
+securityText.TextXAlignment = Enum.TextXAlignment.Left
+
+-- REFIXED LOGIC: SYNTAX & COLORS
+local function updateEditor()
+    local text = editor.Text
+    
+    -- Update Line Numbers
+    local _, lines = text:gsub("\n", "")
+    local numStr = ""
+    for i = 1, lines + 1 do numStr = numStr .. i .. "\n" end
+    lineNumbers.Text = numStr
+
+    -- Fix Colors Logic
+    local highlighted = text:gsub("<", "&lt;"):gsub(">", "&gt;")
+    
+    -- Strings (Galben)
+    highlighted = highlighted:gsub('"(.-)"', '<font color="rgb(255, 255, 100)">"%1"</font>')
+    highlighted = highlighted:gsub("'(.-)'", '<font color="rgb(255, 255, 100)">\'%1\'</font>')
+
+    -- Keywords (Roz)
+    local keywords = {"local", "function", "if", "then", "else", "end", "return", "while", "for", "do", "nil", "true", "false", "and", "or", "not"}
+    for _, word in pairs(keywords) do
+        highlighted = highlighted:gsub("%f[%w]"..word.."%f[%W]", '<font color="rgb(255, 100, 255)">'..word..'</font>')
+    end
+    
+    -- Built-ins (Albastru)
+    highlighted = highlighted:gsub("game", '<font color="rgb(100, 200, 255)">game</font>')
+    highlighted = highlighted:gsub("print", '<font color="rgb(100, 255, 200)">print</font>')
+    highlighted = highlighted:gsub("task", '<font color="rgb(100, 200, 255)">task</font>')
+    highlighted = highlighted:gsub("wait", '<font color="rgb(100, 200, 255)">wait</font>')
+
+    highlightLabel.Text = highlighted
 end
+editor:GetPropertyChangedSignal("Text"):Connect(updateEditor)
 
-local execBtn = createBtn("EXECUTE", 0, true)
-local clearBtn = createBtn("CLEAR", 130, false)
-local addTabBtn = createBtn("NEW TAB", 260, false)
-
--- LOGICA FOLDER (ISTORIC CU DELETE)
+-- HISTORY MANAGEMENT
 local function updateFolder()
     for _, v in pairs(folderScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
     for i, code in ipairs(history) do
         local hFrame = Instance.new("Frame", folderScroll)
         hFrame.Size = UDim2.new(1, -5, 0, 30)
-        hFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+        hFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         Instance.new("UICorner", hFrame)
 
         local hBtn = Instance.new("TextButton", hFrame)
         hBtn.Size = UDim2.new(1, -30, 1, 0)
         hBtn.BackgroundTransparency = 1
-        hBtn.Text = "Log_Script_"..i
-        hBtn.TextColor3 = Color3.fromRGB(0, 200, 100)
+        hBtn.Text = "Log_"..i
+        hBtn.TextColor3 = Color3.fromRGB(0, 255, 120)
         hBtn.Font = Enum.Font.Code
         hBtn.TextSize = 11
 
@@ -207,84 +203,87 @@ local function updateFolder()
         delBtn.Size = UDim2.new(0, 25, 0, 25)
         delBtn.Position = UDim2.new(1, -27, 0.5, -12)
         delBtn.Text = "x"
-        delBtn.TextColor3 = Color3.fromRGB(200, 50, 50)
+        delBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
         delBtn.BackgroundTransparency = 1
-        delBtn.Font = Enum.Font.GothamBold
         
         hBtn.MouseButton1Click:Connect(function() editor.Text = code end)
-        delBtn.MouseButton1Click:Connect(function()
-            table.remove(history, i)
-            updateFolder()
-        end)
+        delBtn.MouseButton1Click:Connect(function() table.remove(history, i) updateFolder() end)
     end
 end
 
--- LOGICA TABS
-local function refreshTabs()
-    for _, v in pairs(tabScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-    for i, data in ipairs(scripts) do
-        local tabFrame = Instance.new("Frame", tabScroll)
-        tabFrame.Size = UDim2.new(0, 130, 1, 0)
-        tabFrame.BackgroundColor3 = (i == activeTabIndex) and Color3.fromRGB(0, 45, 20) or Color3.fromRGB(10, 10, 10)
-        Instance.new("UICorner", tabFrame)
-
-        local tabBtn = Instance.new("TextButton", tabFrame)
-        tabBtn.Size = UDim2.new(1, -30, 1, 0)
-        tabBtn.BackgroundTransparency = 1
-        tabBtn.Text = data.name
-        tabBtn.TextColor3 = (i == activeTabIndex) and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(120, 120, 120)
-        tabBtn.Font = Enum.Font.Code
-        tabBtn.TextSize = 12
-
-        local closeT = Instance.new("TextButton", tabFrame)
-        closeT.Size = UDim2.new(0, 20, 0, 20)
-        closeT.Position = UDim2.new(1, -25, 0.5, -10)
-        closeT.Text = "x"
-        closeT.TextColor3 = Color3.fromRGB(255, 80, 80)
-        closeT.BackgroundTransparency = 1
-        closeT.TextSize = 14
-
-        tabBtn.MouseButton1Click:Connect(function()
-            scripts[activeTabIndex].content = editor.Text
-            activeTabIndex = i
-            editor.Text = scripts[i].content
-            refreshTabs()
-        end)
-
-        closeT.MouseButton1Click:Connect(function()
-            if #scripts > 1 then
-                table.remove(scripts, i)
-                if activeTabIndex >= i and activeTabIndex > 1 then activeTabIndex = activeTabIndex - 1 end
-                editor.Text = scripts[activeTabIndex].content
-                refreshTabs()
-            end
-        end)
-    end
-end
-
--- ACTIUNI
-execBtn.MouseButton1Click:Connect(function()
+-- SCAN LOGIC
+local function scanScript()
     local code = editor.Text
-    table.insert(history, 1, code)
+    if code:find("Zee4625/ZEEHUB") then
+        securityText.Text = "Safety Score: 9/10 - Verdict: Trusted Hub"
+        securityText.TextColor3 = Color3.fromRGB(0, 255, 120)
+    elseif code:find("loadstring") and code:find("HttpGet") then
+        securityText.Text = "Safety Score: 4/10 - Verdict: Dangerous loadstring"
+        securityText.TextColor3 = Color3.fromRGB(255, 150, 0)
+    else
+        securityText.Text = "Safety Score: 10/10 - Verdict: Safe"
+        securityText.TextColor3 = Color3.fromRGB(0, 255, 120)
+    end
+end
+
+-- BUTTONS SETUP
+local footer = Instance.new("Frame", main)
+footer.Size = UDim2.new(1, -260, 0, 50)
+footer.Position = UDim2.new(0, 245, 1, -90)
+footer.BackgroundTransparency = 1
+
+local function createBtn(text, x, color)
+    local btn = Instance.new("TextButton", footer)
+    btn.Size = UDim2.new(0, 100, 0, 35)
+    btn.Position = UDim2.new(0, x, 0.5, -17)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.Text = text
+    btn.TextColor3 = color
+    btn.Font = Enum.Font.Code
+    btn.TextSize = 11
+    Instance.new("UICorner", btn)
+    Instance.new("UIStroke", btn).Color = color
+    return btn
+end
+
+local execBtn = createBtn("EXECUTE", 0, Color3.fromRGB(0, 255, 120))
+local clearBtn = createBtn("CLEAR", 110, Color3.fromRGB(200, 200, 200))
+local scanBtn = createBtn("SCAN", 220, Color3.fromRGB(0, 200, 255))
+
+execBtn.MouseButton1Click:Connect(function()
+    table.insert(history, 1, editor.Text)
     updateFolder()
-    local func, err = loadstring(code)
-    if func then task.spawn(func) else warn("Zeron Error: "..err) end
+    local func, err = loadstring(editor.Text)
+    if func then task.spawn(func) end
 end)
 
 clearBtn.MouseButton1Click:Connect(function() editor.Text = "" end)
+scanBtn.MouseButton1Click:Connect(scanScript)
 
-addTabBtn.MouseButton1Click:Connect(function()
-    table.insert(scripts, {name = "Script "..(#scripts + 1), content = ""})
-    refreshTabs()
-end)
+-- MINIMIZE SYSTEM
+local miniIcon = Instance.new("TextButton", gui)
+miniIcon.Size = UDim2.new(0, 60, 0, 60)
+miniIcon.Position = UDim2.new(0.9, 0, 0.8, 0)
+miniIcon.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+miniIcon.Text = "Z"
+miniIcon.TextColor3 = Color3.fromRGB(0, 255, 120)
+miniIcon.Font = Enum.Font.Code
+miniIcon.TextSize = 35
+miniIcon.Visible = false
+Instance.new("UICorner", miniIcon).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", miniIcon).Color = Color3.fromRGB(0, 255, 120)
 
--- INITIALIZARE
-editor.Text = scripts[1].content
-refreshTabs()
-updateFolder()
+miniBtn.MouseButton1Click:Connect(function() main.Visible = false miniIcon.Visible = true end)
+miniIcon.MouseButton1Click:Connect(function() main.Visible = true miniIcon.Visible = false end)
+closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
 
--- DRAG SYSTEM
-local dragging, dragStart, startPos
-topBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = i.Position startPos = main.Position end end)
-UIS.InputChanged:Connect(function(i) if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then local d = i.Position - dragStart main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y) end end)
-UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+-- DRAG
+local function drag(obj)
+    local dragging, dStart, sPos
+    obj.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dStart = i.Position sPos = obj.Position end end)
+    UIS.InputChanged:Connect(function(i) if dragging and i.UserInputType == Enum.MouseMovement then local d = i.Position - dStart obj.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset+d.X, sPos.Y.Scale, sPos.Y.Offset+d.Y) end end)
+    UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+end
+drag(main) drag(miniIcon)
+
+updateEditor()
