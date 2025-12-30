@@ -1,0 +1,204 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+local SoundService = game:GetService("SoundService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
+-- [[ 1. CONFIGURARE VIZUALĂ: DRAGON EMPEROR ]]
+local Window = WindUI:CreateWindow({
+    Title = "HAO Hub",
+    Folder = "hao_eternal_v1",
+    Icon = "solar:crown-bold",
+    NewElements = true,
+    AccentColor = Color3.fromHex("#D4AF37"), -- Metallic Gold
+    OpenButton = {
+        Title = "SUMMON UI",
+        Enabled = true,
+        Draggable = true,
+        Color = ColorSequence.new(Color3.fromHex("#1A1A1A"), Color3.fromHex("#D4AF37"))
+    }
+})
+
+-- [[ 2. SECVENȚĂ CINEMATICĂ DE START ]]
+task.spawn(function()
+    local steps = {
+        {Txt = "Establishing Soul Connection...", Icon = "solar:wifi-bold"},
+        {Txt = "Accessing Imperial Archives...", Icon = "solar:folder-open-bold"},
+        {Txt = "Synchronizing with " .. Players.LocalPlayer.DisplayName .. "...", Icon = "solar:user-check-bold"},
+        {Txt = "Hao Hub: Loaded Successfully.", Icon = "solar:check-circle-bold"}
+    }
+    
+    for _, step in ipairs(steps) do
+        WindUI:Notify({ Title = "System Boot", Content = step.Txt, Icon = step.Icon, Duration = 1.5 })
+        task.wait(0.8)
+    end
+end)
+
+-- Funcție Audio
+local function PlaySound(id)
+    local s = Instance.new("Sound", SoundService)
+    s.SoundId = "rbxassetid://" .. id
+    s.Volume = 2
+    s.PlayOnRemove = true
+    s:Destroy()
+end
+PlaySound(160715357) -- Sunet epic la start
+
+---------------------------------------------------------
+-- TAB 1: THE THRONE (INFO & STATS)
+---------------------------------------------------------
+local InfoTab = Window:Tab({ 
+    Title = "The Throne", 
+    Icon = "solar:crown-star-bold", 
+    IconColor = Color3.fromHex("#D4AF37") 
+})
+
+-- Section: Emperor's Identity
+local Profile = InfoTab:Section({ Title = "Emperor's Identity" })
+Profile:Section({ 
+    Title = "Ruler: " .. Players.LocalPlayer.DisplayName,
+    Icon = "solar:user-circle-bold",
+    TextTransparency = 0 
+})
+Profile:Section({ 
+    Title = "Legacy: " .. Players.LocalPlayer.AccountAge .. " Days Reign", 
+    Icon = "solar:history-bold" 
+})
+
+-- Section: Realm Stability (Live Stats)
+local StatsSec = InfoTab:Section({ Title = "Realm Stability" })
+local PingLbl = StatsSec:Section({ Title = "Soul Latency: --", Icon = "solar:transmission-bold" })
+local FPSLbl = StatsSec:Section({ Title = "Visual Flow: --", Icon = "solar:videocamera-bold" })
+local MemLbl = StatsSec:Section({ Title = "Memory Load: --", Icon = "solar:server-bold" })
+
+-- Section: Royal Decrees (Utils)
+local UtilsSec = InfoTab:Section({ Title = "Royal Decrees" })
+
+UtilsSec:Button({
+    Title = "Strategic Withdrawal (Rejoin)",
+    Desc = "Return to the lobby and reconnect.",
+    Icon = "solar:restart-bold",
+    Callback = function()
+        PlaySound(4612375233)
+        game:GetService("TeleportService"):Teleport(game.PlaceId, Players.LocalPlayer)
+    end
+})
+
+UtilsSec:Button({
+    Title = "Unlock Limits (FPS Boost)",
+    Desc = "Breaks the 60 FPS chains.",
+    Icon = "solar:bolt-bold",
+    Callback = function()
+        PlaySound(4612375233)
+        setfpscap(999)
+        WindUI:Notify({Title = "Power Unleashed", Content = "FPS Cap has been removed.", Icon = "solar:bolt-bold"})
+    end
+})
+
+---------------------------------------------------------
+-- TAB 2: CONQUEST (GAMES LIBRARY)
+---------------------------------------------------------
+local GamesTab = Window:Tab({ 
+    Title = "Conquest", 
+    Icon = "solar:swords-bold", 
+    IconColor = Color3.fromHex("#FF4500") 
+})
+
+-- == PATH OF DESTRUCTION (Combat Games) ==
+GamesTab:Divider({ Title = "◆ PATH OF DESTRUCTION ◆" })
+
+GamesTab:Button({
+    Title = "The Strongest Battlegrounds",
+    Desc = "Access TSB Dominator Hub.",
+    Icon = "solar:fist-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/TSB-7821"))() 
+    end
+})
+
+GamesTab:Button({
+    Title = "Blox Fruits",
+    Desc = "Access Sea God Hub.",
+    Icon = "solar:anchor-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/Xz0"))() 
+    end
+})
+
+GamesTab:Button({
+    Title = "Arsenal / FPS",
+    Desc = "Universal Aimbot & ESP.",
+    Icon = "solar:target-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/FPS-GUNS"))() 
+    end
+})
+
+-- == PATH OF PROSPERITY (Simulator Games) ==
+GamesTab:Divider({ Title = "◆ PATH OF PROSPERITY ◆" })
+
+GamesTab:Button({
+    Title = "Pet Simulator 99 / GO",
+    Desc = "Auto-Farm & Hatch.",
+    Icon = "solar:cat-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/BSSSSSSSSSSSSSS"))() 
+    end
+})
+
+GamesTab:Button({
+    Title = "Fisch (Fishing Empire)",
+    Desc = "Auto-Cast & Catch Legendary.",
+    Icon = "solar:water-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZZINSWARE/Fisch/refs/heads/main/ZZINSWARE"))() 
+    end
+})
+
+-- == UNIVERSAL DOMINATION ==
+GamesTab:Divider({ Title = "◆ UNIVERSAL DOMINATION ◆" })
+
+GamesTab:Button({
+    Title = "Infinite Yield (God Mode)",
+    Desc = "Admin commands for any reality.",
+    Icon = "solar:shield-star-bold",
+    Callback = function() 
+        PlaySound(4612375233)
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() 
+    end
+})
+
+---------------------------------------------------------
+-- LIVE MONITORING LOOP (Optimized)
+---------------------------------------------------------
+task.spawn(function()
+    while true do
+        -- Calcul FPS
+        local fps = math.floor(1 / RunService.RenderStepped:Wait())
+        
+        -- Calcul Ping
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        
+        -- Calcul Memorie (RAM)
+        local mem = math.floor(Stats:GetTotalMemoryUsageMb())
+
+        -- Actualizare Text
+        PingLbl:SetTitle("Soul Latency: " .. ping .. "ms")
+        FPSLbl:SetTitle("Visual Flow: " .. fps .. " FPS")
+        MemLbl:SetTitle("Memory Load: " .. mem .. " MB")
+        
+        task.wait(0.5) -- Update la fiecare 0.5s pentru fluiditate
+    end
+end)
+
+-- [[ TOGGLE KEYBIND ]]
+game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.RightControl then
+        Window:Toggle()
+    end
+end)
