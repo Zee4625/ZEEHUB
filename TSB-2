@@ -1,0 +1,52 @@
+-- [[ ZeeHUB v11 - SIMPLE VERSION ]] --
+
+-- Load Library
+local Library = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/UILIBRARY-ZEE"
+))()
+
+-- Main Window
+local window = Library:Window(".  ZeeHUB v11 - Simple")
+
+---------------------------------------------------------
+-- SINGLE TAB
+---------------------------------------------------------
+local mainTab = window:Tab({"Main", "rbxassetid://7734022041"})
+
+---------------------------------------------------------
+-- DROPDOWN 1: CUSTOM MOVESET
+---------------------------------------------------------
+mainTab:Dropdown("Custom Moveset", {"TSB"}, function(selected)
+    if selected == "TSB" then
+        loadstring(game:HttpGetAsync(
+            "https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/TSB-7821",
+            true
+        ))()
+    end
+end)
+
+---------------------------------------------------------
+-- DROPDOWN 2: KILL FARM
+---------------------------------------------------------
+mainTab:Dropdown("Kill Farm", {"TSB Kill Farm"}, function(selected)
+    if selected == "TSB Kill Farm" then
+        loadstring(game:HttpGet(
+            "https://raw.githubusercontent.com/Zee4625/ZEEHUB/main/TSB"
+        ))()
+    end
+end)
+
+---------------------------------------------------------
+-- DROPDOWN 3: FUN
+---------------------------------------------------------
+mainTab:Dropdown("Fun", {"Fling", "Fling-Touch"}, function(selected)
+    local urls = {
+        ["Fling"] = "POWER",
+        ["Fling-Touch"] = "POWER2"
+    }
+
+    loadstring(game:HttpGetAsync(
+        "https://raw.githubusercontent.com/Zee4625/Blox-Fruits/refs/heads/main/" .. urls[selected],
+        true
+    ))()
+end)
