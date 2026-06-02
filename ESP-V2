@@ -1,0 +1,640 @@
+-- [[ ZZINS ESP - Big Paintball 2 ]] --
+
+local LocalPlayer = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+-- ESP Variables
+local espEnabled = false
+local espDrawings = {}
+local espBoxEnabled = true
+local espBoxColor = Color3.fromRGB(255, 0, 0)
+local espBoxThickness = 2
+local espTracerEnabled = true
+local espTracerColor = Color3.fromRGB(255, 0, 0)
+local espTracerThickness = 1.5
+local espNameEnabled = true
+local espNameColor = Color3.fromRGB(255, 255, 255)
+local espNameSize = 12
+local espDistanceEnabled = true
+local espDistanceColor = Color3.fromRGB(200, 200, 200)
+local espHealthBarEnabled = true
+local espHealthBarThickness = 3
+local espHeadDotEnabled = false
+local espHeadDotSize = 3
+local espSnaplinesEnabled = false
+local espSnaplineColor = Color3.fromRGB(255, 0, 0)
+local espTeamColorEnabled = true
+local espTeamColor = Color3.fromRGB(0, 255, 0)
+local espEnemyColor = Color3.fromRGB(255, 0, 0)
+local espMaxDistance = 500
+local espRainbowMode = false
+local rainbowHue = 0
+
+-- Team detection
+local function getTeam()
+    local character = LocalPlayer.Character
+    if not character then return nil end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return nil end
+    local team = humanoid:GetAttribute("Team")
+    if team then return team end
+    local playerTeam = LocalPlayer.Team
+    if playerTeam then return playerTeam.Name end
+    return nil
+end
+
+local function getPlayerTeam(player)
+    local character = player.Character
+    if not character then return nil end
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return nil end
+    local team = humanoid:GetAttribute("Team")
+    if team then return team end
+    local playerTeam = player.Team
+    if playerTeam then return playerTeam.Name end
+    return nil
+end
+
+local function isTeammate(player)
+    local myTeam = getTeam()
+    local theirTeam = getPlayerTeam(player)
+    if myTeam and theirTeam then
+        return myTeam == theirTeam
+    end
+    return false
+end
+
+local function updateRainbow()
+    if espRainbowMode then
+        rainbowHue = (rainbowHue + 0.01) % 1
+        local rainbowColor = Color3.fromHSV(rainbowHue, 1, 1)
+        espBoxColor = rainbowColor
+        espTracerColor = rainbowColor
+        espSnaplineColor = rainbowColor
+    end
+end
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+    if espDrawings[player] then
+        for _, obj in pairs(espDrawings[player]) do
+            pcall(function() obj:Remove() end)
+        end
+    end
+
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = espBoxColor
+    Box.Thickness = espBoxThickness
+    Box.Transparency = 1
+    Box.Filled = false
+
+    local Tracer = Drawing.new("Line")
+    Tracer.Visible = false
+    Tracer.Color = espTracerColor
+    Tracer.Thickness = espTracerThickness
+
+    local NameTag = Drawing.new("Text")
+    NameTag.Visible = false
+    NameTag.Color = espNameColor
+    NameTag.Size = espNameSize
+    NameTag.Center = true
+    NameTag.Outline = true
+    NameTag.OutlineColor = Color3.fromRGB(0, 0, 0)
+
+    local DistanceTag = Drawing.new("Text")
+    DistanceTag.Visible = false
+    DistanceTag.Color = espDistanceColor
+    DistanceTag.Size = 10
+    DistanceTag.Center = true
+    DistanceTag.Outline = true
+    DistanceTag.OutlineColor = Color3.fromRGB(0, 0, 0)
+
+    local HealthBar = Drawing.new("Line")
+    HealthBar.Visible = false
+    HealthBar.Color = Color3.fromRGB(0, 255, 0)
+    HealthBar.Thickness = espHealthBarThickness
+
+    local HeadDot = Drawing.new("Circle")
+    HeadDot.Visible = false
+    HeadDot.Color = espBoxColor
+    HeadDot.Thickness = espHeadDotSize
+    HeadDot.Radius = espHeadDotSize / 2
+    HeadDot.Filled = true
+
+    local Snapline = Drawing.new("Line")
+    Snapline.Visible = false
+    Snapline.Color = espSnaplineColor
+    Snapline.Thickness = 1
+
+    espDrawings[player] = {
+        Box = Box, Tracer = Tracer, NameTag = NameTag, DistanceTag = DistanceTag,
+        HealthBar = HealthBar, HeadDot = HeadDot, Snapline = Snapline
+    }
+end
+
+local function removeESP(player)
+    local data = espDrawings[player]
+    if data then
+        pcall(function() data.Box:Remove() end)
+        pcall(function() data.Tracer:Remove() end)
+        pcall(function() data.NameTag:Remove() end)
+        pcall(function() data.DistanceTag:Remove() end)
+        pcall(function() data.HealthBar:Remove() end)
+        pcall(function() data.HeadDot:Remove() end)
+        pcall(function() data.Snapline:Remove() end)
+        espDrawings[player] = nil
+    end
+end
+
+local function updateESP()
+    updateRainbow()
+
+    if not espEnabled then
+        for _, data in pairs(espDrawings) do
+            if data then
+                data.Box.Visible = false
+                data.Tracer.Visible = false
+                data.NameTag.Visible = false
+                data.DistanceTag.Visible = false
+                data.HealthBar.Visible = false
+                data.HeadDot.Visible = false
+                data.Snapline.Visible = false
+            end
+        end
+        return
+    end
+
+    local viewport = Camera.ViewportSize
+    local center = Vector2.new(viewport.X / 2, viewport.Y)
+
+    for player, data in pairs(espDrawings) do
+        if player == LocalPlayer then continue end
+
+        local char = player.Character
+        if not char then
+            data.Box.Visible = false data.Tracer.Visible = false
+            data.NameTag.Visible = false data.DistanceTag.Visible = false
+            data.HealthBar.Visible = false data.HeadDot.Visible = false
+            data.Snapline.Visible = false
+            continue
+        end
+
+        local humanoid = char:FindFirstChild("Humanoid")
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+
+        if not humanoid or not rootPart or humanoid.Health <= 0 then
+            data.Box.Visible = false data.Tracer.Visible = false
+            data.NameTag.Visible = false data.DistanceTag.Visible = false
+            data.HealthBar.Visible = false data.HeadDot.Visible = false
+            data.Snapline.Visible = false
+            continue
+        end
+
+        local distance = (Camera.CFrame.Position - rootPart.Position).Magnitude
+        if distance > espMaxDistance then
+            data.Box.Visible = false data.Tracer.Visible = false
+            data.NameTag.Visible = false data.DistanceTag.Visible = false
+            data.HealthBar.Visible = false data.HeadDot.Visible = false
+            data.Snapline.Visible = false
+            continue
+        end
+
+        local pos, onScreen = Camera:worldToViewportPoint(rootPart.Position)
+        local teamColor = espTeamColorEnabled and (isTeammate(player) and espTeamColor or espEnemyColor) or espBoxColor
+
+        local head = char:FindFirstChild("Head")
+        local headPos = head and Camera:worldToViewportPoint(head.Position) or pos
+        local legPos = Camera:worldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+
+        local boxHeight = headPos.Y - legPos.Y
+        local boxWidth = boxHeight * 0.5
+
+        if espBoxEnabled and onScreen then
+            data.Box.Size = Vector2.new(boxWidth, boxHeight)
+            data.Box.Position = Vector2.new(pos.X - boxWidth/2, legPos.Y)
+            data.Box.Color = teamColor
+            data.Box.Thickness = espBoxThickness
+            data.Box.Visible = true
+        else
+            data.Box.Visible = false
+        end
+
+        if espHealthBarEnabled and onScreen then
+            local health = humanoid.Health / humanoid.MaxHealth
+            local barX = data.Box.Position.X + data.Box.Size.X + 5
+            local barY = data.Box.Position.Y
+            local barHeight = data.Box.Size.Y
+            data.HealthBar.From = Vector2.new(barX, barY + barHeight * (1 - health))
+            data.HealthBar.To = Vector2.new(barX, barY + barHeight)
+            data.HealthBar.Color = Color3.new(1 - health, health, 0)
+            data.HealthBar.Thickness = espHealthBarThickness
+            data.HealthBar.Visible = true
+        else
+            data.HealthBar.Visible = false
+        end
+
+        if espNameEnabled and onScreen then
+            data.NameTag.Position = Vector2.new(pos.X, data.Box.Position.Y - 15)
+            data.NameTag.Text = player.Name
+            data.NameTag.Color = teamColor
+            data.NameTag.Size = espNameSize
+            data.NameTag.Visible = true
+        else
+            data.NameTag.Visible = false
+        end
+
+        if espDistanceEnabled and onScreen then
+            data.DistanceTag.Position = Vector2.new(pos.X, data.Box.Position.Y + data.Box.Size.Y + 5)
+            data.DistanceTag.Text = math.floor(distance) .. "m"
+            data.DistanceTag.Size = 10
+            data.DistanceTag.Visible = true
+        else
+            data.DistanceTag.Visible = false
+        end
+
+        if espHeadDotEnabled and head and onScreen then
+            data.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
+            data.HeadDot.Color = teamColor
+            data.HeadDot.Visible = true
+        else
+            data.HeadDot.Visible = false
+        end
+
+        if espSnaplinesEnabled then
+            data.Snapline.From = Vector2.new(center.X, center.Y + 50)
+            data.Snapline.To = Vector2.new(pos.X, pos.Y)
+            data.Snapline.Color = teamColor
+            data.Snapline.Visible = true
+        else
+            data.Snapline.Visible = false
+        end
+
+        if espTracerEnabled then
+            data.Tracer.From = Vector2.new(center.X, center.Y)
+            data.Tracer.To = Vector2.new(pos.X, pos.Y)
+            data.Tracer.Color = teamColor
+            data.Tracer.Thickness = espTracerThickness
+            data.Tracer.Visible = true
+        else
+            data.Tracer.Visible = false
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(updateESP)
+
+for _, plr in pairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer then createESP(plr) end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    if plr ~= LocalPlayer then createESP(plr) end
+end)
+Players.PlayerRemoving:Connect(removeESP)
+
+---------------------------------------------------------
+-- GUI
+---------------------------------------------------------
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ZeeHub_ESP"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game.CoreGui
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- Accent line top
+local AccentLine = Instance.new("Frame")
+AccentLine.Size = UDim2.new(1, 0, 0, 2)
+AccentLine.Position = UDim2.new(0, 0, 0, 0)
+AccentLine.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+AccentLine.BorderSizePixel = 0
+AccentLine.Parent = MainFrame
+
+local AccentCorner = Instance.new("UICorner")
+AccentCorner.CornerRadius = UDim.new(0, 8)
+AccentCorner.Parent = AccentLine
+
+-- Title bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.Position = UDim2.new(0, 0, 0, 2)
+TitleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -50, 1, 0)
+TitleLabel.Position = UDim2.new(0, 14, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "ZeeHub ESP"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 14
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Size = UDim2.new(0, 120, 1, 0)
+SubLabel.Position = UDim2.new(0, 90, 0, 0)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "Professional ESP"
+SubLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+SubLabel.TextSize = 11
+SubLabel.Font = Enum.Font.Gotham
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.Parent = TitleBar
+
+-- Close button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -36, 0, 6)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 16
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    espEnabled = false
+end)
+
+-- Minimize button
+local MinBtn = Instance.new("TextButton")
+MinBtn.Size = UDim2.new(0, 28, 0, 28)
+MinBtn.Position = UDim2.new(1, -68, 0, 6)
+MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+MinBtn.Text = "—"
+MinBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+MinBtn.TextSize = 12
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.BorderSizePixel = 0
+MinBtn.Parent = TitleBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 6)
+MinCorner.Parent = MinBtn
+
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local contentFrame = MainFrame:FindFirstChild("ContentFrame")
+    if contentFrame then
+        contentFrame.Visible = not minimized
+    end
+    MainFrame.Size = minimized and UDim2.new(0, 280, 0, 44) or UDim2.new(0, 280, 0, 400)
+end)
+
+-- Content Frame (scrollable)
+local ContentFrame = Instance.new("ScrollingFrame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, 0, 1, -44)
+ContentFrame.Position = UDim2.new(0, 0, 0, 44)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.BorderSizePixel = 0
+ContentFrame.ScrollBarThickness = 3
+ContentFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 50, 50)
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ContentFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 4)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Parent = ContentFrame
+
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingTop = UDim.new(0, 8)
+UIPadding.PaddingBottom = UDim.new(0, 8)
+UIPadding.Parent = ContentFrame
+
+-- Helper: Section label
+local function makeSection(text)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -20, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "— " .. text .. " —"
+    lbl.TextColor3 = Color3.fromRGB(255, 50, 50)
+    lbl.TextSize = 10
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = ContentFrame
+end
+
+-- Helper: Toggle row
+local function makeToggle(labelText, defaultVal, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -20, 0, 32)
+    row.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    row.BorderSizePixel = 0
+    row.Parent = ContentFrame
+
+    local rc = Instance.new("UICorner")
+    rc.CornerRadius = UDim.new(0, 6)
+    rc.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -60, 1, 0)
+    lbl.Position = UDim2.new(0, 10, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(210, 210, 210)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+
+    local togBg = Instance.new("Frame")
+    togBg.Size = UDim2.new(0, 36, 0, 18)
+    togBg.Position = UDim2.new(1, -46, 0.5, -9)
+    togBg.BackgroundColor3 = defaultVal and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(40, 40, 55)
+    togBg.BorderSizePixel = 0
+    togBg.Parent = row
+
+    local tbCorner = Instance.new("UICorner")
+    tbCorner.CornerRadius = UDim.new(1, 0)
+    tbCorner.Parent = togBg
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 12, 0, 12)
+    knob.Position = defaultVal and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    knob.Parent = togBg
+
+    local kCorner = Instance.new("UICorner")
+    kCorner.CornerRadius = UDim.new(1, 0)
+    kCorner.Parent = knob
+
+    local state = defaultVal
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.Parent = row
+
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        TweenService:Create(togBg, TweenInfo.new(0.15), {
+            BackgroundColor3 = state and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(40, 40, 55)
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.15), {
+            Position = state and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
+        }):Play()
+        callback(state)
+    end)
+end
+
+-- Helper: Slider row
+local function makeSlider(labelText, minV, maxV, defaultV, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -20, 0, 44)
+    row.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    row.BorderSizePixel = 0
+    row.Parent = ContentFrame
+
+    local rc = Instance.new("UICorner")
+    rc.CornerRadius = UDim.new(0, 6)
+    rc.Parent = row
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -50, 0, 20)
+    lbl.Position = UDim2.new(0, 10, 0, 4)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(210, 210, 210)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+
+    local valLbl = Instance.new("TextLabel")
+    valLbl.Size = UDim2.new(0, 40, 0, 20)
+    valLbl.Position = UDim2.new(1, -48, 0, 4)
+    valLbl.BackgroundTransparency = 1
+    valLbl.Text = tostring(defaultV)
+    valLbl.TextColor3 = Color3.fromRGB(255, 50, 50)
+    valLbl.TextSize = 11
+    valLbl.Font = Enum.Font.GothamBold
+    valLbl.TextXAlignment = Enum.TextXAlignment.Right
+    valLbl.Parent = row
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, -20, 0, 4)
+    track.Position = UDim2.new(0, 10, 0, 30)
+    track.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    track.BorderSizePixel = 0
+    track.Parent = row
+
+    local tCorner = Instance.new("UICorner")
+    tCorner.CornerRadius = UDim.new(1, 0)
+    tCorner.Parent = track
+
+    local fill = Instance.new("Frame")
+    local pct = (defaultV - minV) / (maxV - minV)
+    fill.Size = UDim2.new(pct, 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+
+    local fCorner = Instance.new("UICorner")
+    fCorner.CornerRadius = UDim.new(1, 0)
+    fCorner.Parent = fill
+
+    local dragging = false
+    local sliderBtn = Instance.new("TextButton")
+    sliderBtn.Size = UDim2.new(1, 0, 0, 20)
+    sliderBtn.Position = UDim2.new(0, 0, 0, 22)
+    sliderBtn.BackgroundTransparency = 1
+    sliderBtn.Text = ""
+    sliderBtn.Parent = row
+
+    local function updateSlider(inputX)
+        local trackAbsPos = track.AbsolutePosition.X
+        local trackAbsSize = track.AbsoluteSize.X
+        local relative = math.clamp((inputX - trackAbsPos) / trackAbsSize, 0, 1)
+        local value = math.floor(minV + (maxV - minV) * relative)
+        fill.Size = UDim2.new(relative, 0, 1, 0)
+        valLbl.Text = tostring(value)
+        callback(value)
+    end
+
+    sliderBtn.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input.Position.X)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    sliderBtn.MouseButton1Down:Connect(function(x, y)
+        updateSlider(x)
+    end)
+end
+
+-- Build UI sections
+makeSection("MAIN")
+makeToggle("Enable ESP", false, function(s)
+    espEnabled = s
+    if s then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and not espDrawings[plr] then createESP(plr) end
+        end
+    end
+end)
+makeToggle("Team Colors", true, function(s) espTeamColorEnabled = s end)
+makeToggle("Rainbow Mode", false, function(s) espRainbowMode = s end)
+makeSlider("Max Distance", 100, 2000, 500, function(v) espMaxDistance = v end)
+
+makeSection("BOX")
+makeToggle("Box ESP", true, function(s) espBoxEnabled = s end)
+makeSlider("Box Thickness", 1, 5, 2, function(v) espBoxThickness = v end)
+
+makeSection("TRACER")
+makeToggle("Tracers", true, function(s) espTracerEnabled = s end)
+makeSlider("Tracer Thickness", 1, 3, 2, function(v) espTracerThickness = v end)
+
+makeSection("TEXT")
+makeToggle("Name Tags", true, function(s) espNameEnabled = s end)
+makeToggle("Distance", true, function(s) espDistanceEnabled = s end)
+makeSlider("Name Size", 8, 20, 12, function(v) espNameSize = v end)
+
+makeSection("HEALTH")
+makeToggle("Health Bar", true, function(s) espHealthBarEnabled = s end)
+makeSlider("Health Bar Thickness", 2, 6, 3, function(v) espHealthBarThickness = v end)
+
+makeSection("EXTRA")
+makeToggle("Head Dot", false, function(s) espHeadDotEnabled = s end)
+makeToggle("Snaplines", false, function(s) espSnaplinesEnabled = s end)
+makeSlider("Head Dot Size", 2, 10, 3, function(v) espHeadDotSize = v end)
