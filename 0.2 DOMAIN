@@ -1,0 +1,185 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local isAutoSpamAll = false
+local spamDelay = 0.1
+
+local function getAllOtherPlayers()
+    local otherPlayers = {}
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = v.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                table.insert(otherPlayers, v.Character.HumanoidRootPart)
+            end
+        end
+    end
+    return otherPlayers
+end
+
+task.spawn(function()
+    while true do
+        if isAutoSpamAll then
+            local targets = getAllOtherPlayers()
+            if #targets > 0 then
+                local randomTarget = targets[math.random(1, #targets)]
+                local myChar = player.Character
+                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                if myRoot and randomTarget then
+                    local offsets = {
+                        CFrame.new(0, 0, 4), CFrame.new(0, 0, -4),
+                        CFrame.new(4, 0, 0), CFrame.new(-4, 0, 0)
+                    }
+                    local randomOffset = offsets[math.random(1, #offsets)]
+                    myRoot.CFrame = CFrame.lookAt((randomTarget.CFrame * randomOffset).Position, randomTarget.Position)
+                end
+            end
+        end
+        task.wait(spamDelay)
+    end
+end)
+
+---------------------------------------------------------
+-- GUI
+---------------------------------------------------------
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ZeeHub_Domain"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 240, 0, 110)
+MainFrame.Position = UDim2.new(0.5, -120, 0.5, -55)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local AccentLine = Instance.new("Frame")
+AccentLine.Size = UDim2.new(1, 0, 0, 2)
+AccentLine.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+AccentLine.BorderSizePixel = 0
+AccentLine.Parent = MainFrame
+
+local AccentCorner = Instance.new("UICorner")
+AccentCorner.CornerRadius = UDim.new(0, 8)
+AccentCorner.Parent = AccentLine
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.Position = UDim2.new(0, 0, 0, 2)
+TitleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -50, 1, 0)
+TitleLabel.Position = UDim2.new(0, 14, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "ZeeHub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 14
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Size = UDim2.new(0, 100, 1, 0)
+SubLabel.Position = UDim2.new(0, 80, 0, 0)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "0.2 Domain"
+SubLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+SubLabel.TextSize = 11
+SubLabel.Font = Enum.Font.Gotham
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.Parent = TitleBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -36, 0, 6)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 16
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    isAutoSpamAll = false
+    ScreenGui:Destroy()
+end)
+
+-- Toggle Row
+local row = Instance.new("Frame")
+row.Size = UDim2.new(1, -20, 0, 36)
+row.Position = UDim2.new(0, 10, 0, 50)
+row.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+row.BorderSizePixel = 0
+row.Parent = MainFrame
+
+local rowCorner = Instance.new("UICorner")
+rowCorner.CornerRadius = UDim.new(0, 6)
+rowCorner.Parent = row
+
+local rowLabel = Instance.new("TextLabel")
+rowLabel.Size = UDim2.new(1, -60, 1, 0)
+rowLabel.Position = UDim2.new(0, 10, 0, 0)
+rowLabel.BackgroundTransparency = 1
+rowLabel.Text = "Auto Warp"
+rowLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
+rowLabel.TextSize = 12
+rowLabel.Font = Enum.Font.Gotham
+rowLabel.TextXAlignment = Enum.TextXAlignment.Left
+rowLabel.Parent = row
+
+local togBg = Instance.new("Frame")
+togBg.Size = UDim2.new(0, 36, 0, 18)
+togBg.Position = UDim2.new(1, -46, 0.5, -9)
+togBg.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+togBg.BorderSizePixel = 0
+togBg.Parent = row
+
+local tbCorner = Instance.new("UICorner")
+tbCorner.CornerRadius = UDim.new(1, 0)
+tbCorner.Parent = togBg
+
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0, 12, 0, 12)
+knob.Position = UDim2.new(0, 3, 0.5, -6)
+knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+knob.BorderSizePixel = 0
+knob.Parent = togBg
+
+local kCorner = Instance.new("UICorner")
+kCorner.CornerRadius = UDim.new(1, 0)
+kCorner.Parent = knob
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(1, 0, 1, 0)
+btn.BackgroundTransparency = 1
+btn.Text = ""
+btn.Parent = row
+
+btn.MouseButton1Click:Connect(function()
+    isAutoSpamAll = not isAutoSpamAll
+    TweenService:Create(togBg, TweenInfo.new(0.15), {
+        BackgroundColor3 = isAutoSpamAll and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(40, 40, 55)
+    }):Play()
+    TweenService:Create(knob, TweenInfo.new(0.15), {
+        Position = isAutoSpamAll and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
+    }):Play()
+end)
